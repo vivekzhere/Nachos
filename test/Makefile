@@ -37,7 +37,7 @@ CPP = gcc -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-USERPROGS = halt shell matmult sort print open
+USERPROGS = halt shell matmult sort print open exec
 
 all: $(USERPROGS)
 
@@ -81,6 +81,12 @@ open.o: open.c
 open: open.o open.o
 	$(LD) $(LDFLAGS) start.o open.o -o open.coff
 	../bin/coff2noff open.coff open
+	
+exec.o: exec.c
+	$(CC) $(CFLAGS) -c exec.c
+exec: exec.o start.o
+	$(LD) $(LDFLAGS) start.o exec.o -o exec.coff
+	../bin/coff2noff exec.coff exec
 
 clean:
 	rm -f *.o $(USERPROGS)

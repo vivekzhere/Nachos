@@ -2,7 +2,7 @@
 void main()
 {
 	int fd;
-	char *p="Hello World....",buf[25];
+	char *p="Hello World Open....",buf[25];
 	fd=Open("file.txt");
 	Write(p,20,fd);
 	Close(fd);

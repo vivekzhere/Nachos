@@ -74,7 +74,7 @@ SwapHeader (NoffHeader *noffH)
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-AddrSpace::AddrSpace(OpenFile *executable)
+void AddrSpace::AllocateAddrSpace(OpenFile *executable)
 {
     NoffHeader noffH;
     unsigned int i, size;
@@ -200,7 +200,7 @@ int no_pages,page_start,size_offset,src_addr;
 // 	Dealloate an address space.  Nothing for now!
 //----------------------------------------------------------------------
 
-AddrSpace::~AddrSpace()
+void AddrSpace::ReleaseAddrSpace()
 {
 	int i;
 	for(i=0; i<numPages; i++)

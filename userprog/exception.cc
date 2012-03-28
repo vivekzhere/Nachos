@@ -81,7 +81,8 @@ void
 ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
-
+    OpenFile *executable;
+    AddrSpace *space;
     switch(which)
     {
         case SyscallException:
@@ -92,6 +93,46 @@ ExceptionHandler(ExceptionType which)
                          interrupt->Halt();
                          break;
                 
+		case SC_Exec:
+		{
+			DEBUG('a', "Exec system call invoked\n");
+			arg1 = machine->ReadRegister(4);
+			buf[BUF_SIZE - 1] = '\0';
+			int size = 0;
+			do
+			{
+				machine->ReadMem(arg1, sizeof(char), (int*)(buf + size));  
+				arg1 += sizeof(char);
+				size++;
+			}while(size < ( BUF_SIZE - 1) && buf[size - 1] != '\0');
+			
+			executable = fileSystem->Open(buf);
+			if (executable == NULL) {
+				printf("Unable to open file %s\n", buf);
+				machine->WriteRegister(2, -2);
+				bzero(buf, BUF_SIZE);
+				updatePC();
+				break;
+			}
+			
+			currentThread->space->ReleaseAddrSpace();
+			space = new AddrSpace();
+			space->AllocateAddrSpace(executable);
+			currentThread->space = space;
+
+			delete executable;			// close file
+
+			space->InitRegisters();		// set the initial register values
+			space->RestoreState();		// load page table register
+
+			machine->Run();			// jump to the user progam
+			ASSERT(FALSE);	
+			machine->WriteRegister(2, 1);
+			bzero(buf, BUF_SIZE);
+			updatePC();
+		}
+		break;   //SC_Exec                    
+        
                 case SC_Print:
                 {
 			DEBUG('z', "Print() system call invoked \n");

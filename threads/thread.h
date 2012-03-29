@@ -36,6 +36,7 @@
 
 #ifndef THREAD_H
 #define THREAD_H
+#define NumTotalRegs 40
 
 #include "copyright.h"
 #include "utility.h"
@@ -43,10 +44,6 @@
 #ifdef USER_PROGRAM
 #include "machine.h"
 #include "addrspace.h"
-#endif
-
-#ifdef PROC_ID
-int pid=0;
 #endif
 
 // CPU register state to be saved on context switch.  
@@ -79,11 +76,20 @@ extern void ThreadPrint(int arg);
 //  Some threads also belong to a user address space; threads
 //  that only run in the kernel have a NULL address space.
 
+class Thread;
+//Structure for storing child threads
+struct cThreads
+{
+  Thread* child;
+ struct  cThreads* next;
+};
+
+
+
 class Thread {
   private:
     // NOTE: DO NOT CHANGE the order of these first two members.
-    // THEY MUST be in this position for SWITCH to work.
-    int pid;			//process id of current thread
+    // THEY MUST be in this position for SWITCH to work.    
     int* stackTop;			 // the current stack pointer
     int machineState[MachineStateSize];  // all registers except for stackTop
 
@@ -108,7 +114,12 @@ class Thread {
     void setStatus(ThreadStatus st) { status = st; }
     char* getName() { return (name); }
     void Print() { printf("%s, ", name); }
+  
+//extra added  
+    int pid;				//process id of current thread
+    void ChangeUserReg(int reg, int val);
 
+//extra added
   private:
     // some of the private data for this class is listed above
     
@@ -122,12 +133,13 @@ class Thread {
     					// Allocate a stack for thread.
 					// Used internally by Fork()
 
+    int userRegisters[NumTotalRegs];	// user-level CPU register state
 #ifdef USER_PROGRAM
 // A thread running a user program actually has *two* sets of CPU registers -- 
 // one for its state while executing user code, one for its state 
 // while executing kernel code.
 
-    int userRegisters[NumTotalRegs];	// user-level CPU register state
+    
 
   public:
     void SaveUserState();		// save user-level register state

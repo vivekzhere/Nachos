@@ -30,6 +30,7 @@
 #define SC_Fork		9
 #define SC_Yield	10
 #define SC_Print        11
+#define SC_Wait		12
 
 #ifndef IN_ASM
 
@@ -127,7 +128,9 @@ void Yield();
 
 /* Prints a string passed as argument
    */
-void Print(char* str);		
+void Print(char* str);
+
+void Wait();	
 
 #endif /* IN_ASM */
 

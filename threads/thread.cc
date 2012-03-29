@@ -238,6 +238,8 @@ static void ThreadFinish()    { currentThread->Finish(); }
 static void InterruptEnable() { interrupt->Enable(); }
 void ThreadPrint(int arg){ Thread *t = (Thread *)arg; t->Print(); }
 
+
+///extr added
 static void setUpThread()
 {
 	if(threadToBeDestroyed != NULL ){
@@ -253,6 +255,13 @@ static void setUpThread()
 	InterruptEnable();
 }
 
+void Thread::ChangeUserReg(int reg, int val)
+{
+  DEBUG('t', "Changing user state %s\n", getName());
+  userRegisters[reg] = val;
+}
+
+///extra added
 
 //----------------------------------------------------------------------
 // Thread::StackAllocate

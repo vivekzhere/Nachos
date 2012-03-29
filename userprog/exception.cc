@@ -30,6 +30,7 @@
 #include <unistd.h>
 
 #define BUF_SIZE 100
+static int pid=1;
 char buf[BUF_SIZE];
 int arg1,arg2,arg3,arg4;
 //----------------------------------------------------------------------
@@ -76,6 +77,10 @@ void updatePC(){
 		machine->WriteRegister(PCReg, pc);
 		machine->WriteRegister(NextPCReg, nextpc);
 	}
+void StartUserThread(int arg)
+{
+  machine->Run();
+}
 
 void
 ExceptionHandler(ExceptionType which)
@@ -91,6 +96,18 @@ ExceptionHandler(ExceptionType which)
                          DEBUG('z', "Shutdown, initiated by user program.\n");
                          interrupt->Halt();
                          break;
+                         
+                case SC_Exit:
+                {
+			DEBUG('z', "Close() system call invoked \n");
+			currentThread->Finish();
+		/*	arg1 = machine->ReadRegister(4); //filedescriptor of file to be closed
+			DEBUG('z', "File Descriptor = %d\n", arg1);
+			if(close(arg1)<0)
+				printf("Error closing file\n");
+			updatePC();*/
+		}
+		break; // SC_Exit
                 
 		case SC_Exec:
 		{
@@ -292,6 +309,37 @@ ExceptionHandler(ExceptionType which)
 			updatePC();
 		}
 		break; // SC_Close
+		
+		case SC_Fork:
+		{
+			DEBUG('a', "Exec system call invoked\n");
+			arg1 = machine->ReadRegister(4);
+			bzero(buf,BUF_SIZE);
+  			sprintf(buf, "Thread %d", pid);
+			Thread* thread = new Thread(buf);
+			thread->pid = pid++;
+  			thread->space = new AddrSpace(*currentThread->space);
+			thread->SaveUserState();
+			thread->ChangeUserReg(4,0);
+			thread->ChangeUserReg(PCReg, arg1);
+			thread->ChangeUserReg(NextPCReg, arg1 + 4);
+			thread->Fork((VoidFunctionPtr)StartUserThread, arg1);
+			currentThread->Yield();
+			machine->WriteRegister(2,pid-1);
+			updatePC();
+		}
+		break;   //SC_Fork
+		
+		case SC_Wait:
+                {
+			DEBUG('z', "Close() system call invoked \n");
+		/*	arg1 = machine->ReadRegister(4); //filedescriptor of file to be closed
+			DEBUG('z', "File Descriptor = %d\n", arg1);
+			if(close(arg1)<0)
+				printf("Error closing file\n");
+			updatePC();*/
+		}
+		break; // SC_Wait
 
                 default:
                         printf("Unknown/Unimplemented system call %d!", type);

@@ -323,6 +323,7 @@ ExceptionHandler(ExceptionType which)
 			thread->ChangeUserReg(4,0);
 			thread->ChangeUserReg(PCReg, arg1);
 			thread->ChangeUserReg(NextPCReg, arg1 + 4);
+			//currentThread=thread;
 			thread->Fork((VoidFunctionPtr)StartUserThread, arg1);
 			currentThread->Yield();
 			machine->WriteRegister(2,pid-1);

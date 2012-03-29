@@ -10,5 +10,5 @@ void main()
 	Read(buf,20,fd);
 	Print(buf);
 	Close(fd);
-	Halt();	// Optional. Just print stats
+	//Halt();	// Optional. Just print stats
 }

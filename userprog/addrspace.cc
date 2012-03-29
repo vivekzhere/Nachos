@@ -121,77 +121,25 @@ void AddrSpace::AllocateAddrSpace(OpenFile *executable)
 	}
 
 // then, copy in the code and data segments into memory
-int no_pages,page_start,size_offset,src_addr;
-    if (noffH.code.size > 0) {
-    DEBUG('t', "Initializing code segment, at %d, size %d, from %d\n", 
-			noffH.code.virtualAddr, noffH.code.size,noffH.code.inFileAddr);
-            
-        page_start=noffH.code.virtualAddr / PageSize;
-        size_offset=noffH.code.virtualAddr % PageSize;
-        src_addr=noffH.code.inFileAddr;
-        if( size_offset !=0 )
-        {
-        DEBUG('t', "Initializing code segment (-1), at %x, size %d, from %d\n",
-        (pageTable[page_start].physicalPage * PageSize)+size_offset, PageSize-size_offset,src_addr);
-        	executable->ReadAt( &(machine->mainMemory[ (pageTable[page_start].physicalPage * PageSize)+size_offset ]),
-			PageSize-size_offset, src_addr );
-		src_addr+=(PageSize-size_offset);
-		page_start++;
-        }
-            
-        no_pages = (noffH.code.size-size_offset) / PageSize;
-        i=0;
-        DEBUG('t',"Code : Virtual Addr = %d, Page_start = %d , Size_offset = %d\n",noffH.code.virtualAddr,page_start,size_offset);
-        while( i < no_pages )
-        {        	
-        	   DEBUG('t', "Initializing code segment %d, at %d, size %d, from %d\n",
-        	   i,pageTable[page_start+i].physicalPage * PageSize, PageSize,src_addr+(i * PageSize));
-        	  executable->ReadAt( &(machine->mainMemory[pageTable[page_start+i].physicalPage * PageSize]),
-			PageSize, src_addr+(i * PageSize) );
-		i++;
-        }        
-        if( (noffH.code.size-size_offset) % PageSize != 0)
-        {
-        	DEBUG('t', "Initializing code segment %d, at %d, size %d, from %d\n",i,
-        	pageTable[page_start+i].physicalPage * PageSize, src_addr+(i * PageSize));
-        	   executable->ReadAt( &(machine->mainMemory[pageTable[page_start+i].physicalPage * PageSize]),
-			(noffH.code.size-size_offset) % PageSize, src_addr+(i * PageSize) );        
-    	}
-    }    
-        
-    if (noffH.initData.size > 0) {  
-        DEBUG('t', "Initializing data segment, at %d, size %d\n", 
-			noffH.initData.virtualAddr, noffH.initData.size);
-	page_start=noffH.initData.virtualAddr / PageSize;
-        size_offset=noffH.initData.virtualAddr % PageSize;
-        src_addr=noffH.initData.inFileAddr;
-        if( size_offset !=0 )
-        {
-        	DEBUG('t', "Initializing data segment (-1), at %d, size %d\n",(pageTable[page_start].physicalPage * PageSize)+size_offset, PageSize-size_offset);
-        	executable->ReadAt( &(machine->mainMemory[ (pageTable[page_start].physicalPage * PageSize)+size_offset ]),
-			PageSize-size_offset, src_addr );
-		src_addr+=(PageSize-size_offset);
-		page_start++;
-        }
-            
-        no_pages = (noffH.initData.size-size_offset) / PageSize;
-        i=0;
-        DEBUG('t',"DATA : Virtual Addr = %d, Page_start = %d , Size_offset = %d\n",noffH.initData.virtualAddr,page_start,size_offset);
-        while( i < no_pages )
-        {
-        	DEBUG('t', "Initializing data segment %d, at 0x%d, size %d\n",i,pageTable[page_start+i].physicalPage * PageSize, PageSize);
-        	  executable->ReadAt( &(machine->mainMemory[pageTable[page_start+i].physicalPage * PageSize]),
-			PageSize, src_addr+(i * PageSize) );
-		i++;
-        }        
-        if( (noffH.initData.size-size_offset) % PageSize != 0)
-        {
-        	DEBUG('t', "Initializing data segment %d, at 0x%d, size %d\n",i,
-        	pageTable[page_start+i].physicalPage * PageSize, (noffH.initData.size-size_offset) % PageSize);
-        	   executable->ReadAt( &(machine->mainMemory[pageTable[page_start+i].physicalPage * PageSize]),
-			(noffH.initData.size-size_offset) % PageSize, src_addr+(i * PageSize) );	
-    	}
-    }
+	int vpos;
+	if (noffH.code.size > 0) {
+		DEBUG('a', "Initializing code segment, at 0x%x, size %d\n", noffH.code.virtualAddr, noffH.code.size);
+		vpos = noffH.code.virtualAddr;
+		while(vpos < (noffH.code.size + noffH.code.virtualAddr) )
+		{
+			executable->ReadAt(&(machine->mainMemory[AddrTrans(vpos)]), 1, noffH.code.inFileAddr + (vpos - noffH.code.virtualAddr)),
+			vpos++;
+		}
+	}
+	if (noffH.initData.size > 0) {
+		DEBUG('a', "Initializing code segment, at 0x%x, size %d\n", noffH.initData.virtualAddr, noffH.initData.size);
+		vpos = noffH.initData.virtualAddr;
+		while(vpos < (noffH.initData.size + noffH.initData.virtualAddr) )
+		{
+			executable->ReadAt(&(machine->mainMemory[AddrTrans(vpos)]), 1, noffH.initData.inFileAddr + (vpos - noffH.initData.virtualAddr)),
+			vpos++;
+		}
+	}
 
 }
 
@@ -266,4 +214,9 @@ void AddrSpace::RestoreState()
 {
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
+}
+
+int AddrSpace::AddrTrans (int virtAddr)
+{
+	return(pageTable[virtAddr/PageSize].physicalPage * PageSize + (virtAddr %PageSize) );
 }

@@ -24,6 +24,7 @@
 					// execution stack, for detecting 
 					// stack overflows
 
+
 //----------------------------------------------------------------------
 // Thread::Thread
 // 	Initialize a thread control block, so that we can then call
@@ -237,6 +238,22 @@ static void ThreadFinish()    { currentThread->Finish(); }
 static void InterruptEnable() { interrupt->Enable(); }
 void ThreadPrint(int arg){ Thread *t = (Thread *)arg; t->Print(); }
 
+static void setUpThread()
+{
+	if(threadToBeDestroyed != NULL ){
+		delete threadToBeDestroyed;
+		threadToBeDestroyed = NULL;
+	}
+	#ifdef USER_PROGRAM
+	if(currentThread->space != NULL ){
+		currentThread->RestoreUserState();
+		currentThread->space->RestoreState();
+	}
+	#endif
+	InterruptEnable();
+}
+
+
 //----------------------------------------------------------------------
 // Thread::StackAllocate
 //	Allocate and initialize an execution stack.  The stack is
@@ -277,7 +294,8 @@ Thread::StackAllocate (VoidFunctionPtr func, int arg)
 #endif  // HOST_SNAKE
     
     machineState[PCState] = (int) ThreadRoot;
-    machineState[StartupPCState] = (int) InterruptEnable;
+    //machineState[StartupPCState] = (int) InterruptEnable;
+    machineState[StartupPCState] = (int) setUpThread;
     machineState[InitialPCState] = (int) func;
     machineState[InitialArgState] = arg;
     machineState[WhenDonePCState] = (int) ThreadFinish;

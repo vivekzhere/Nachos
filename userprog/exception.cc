@@ -82,7 +82,6 @@ ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
     OpenFile *executable;
-    AddrSpace *space;
     switch(which)
     {
         case SyscallException:
@@ -116,14 +115,12 @@ ExceptionHandler(ExceptionType which)
 			}
 			
 			currentThread->space->ReleaseAddrSpace();
-			space = new AddrSpace();
-			space->AllocateAddrSpace(executable);
-			currentThread->space = space;
-
+			currentThread->space->AllocateAddrSpace(executable);
+			
 			delete executable;			// close file
 
-			space->InitRegisters();		// set the initial register values
-			space->RestoreState();		// load page table register
+			currentThread->space->InitRegisters();		// set the initial register values
+			currentThread->space->RestoreState();		// load page table register
 
 			machine->Run();			// jump to the user progam
 			ASSERT(FALSE);	

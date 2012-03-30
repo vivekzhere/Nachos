@@ -20,8 +20,6 @@
 
 class AddrSpace {
   public:
-    AddrSpace();
-    AddrSpace(const AddrSpace &);
     void AllocateAddrSpace(OpenFile *executable);	// Create an address space,
 					// initializing it with the program
 					// stored in the file "executable"

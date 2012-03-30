@@ -42,6 +42,7 @@ int allocate()
 		}
 		i++;
 	}
+	printf("memory overflow\n");
 }
 
 static void 
@@ -141,47 +142,6 @@ void AddrSpace::AllocateAddrSpace(OpenFile *executable)
 		}
 	}
 
-}
-AddrSpace::AddrSpace()
-{
-}
-AddrSpace::AddrSpace(const AddrSpace &src)
-{
-    int i;
-    numPages = src.numPages;
-    ASSERT(numPages <= NumPhysPages);		// check we're not trying
-						// to run anything too big --
-						// at least until we have
-						// virtual memory
-
-    DEBUG('t', "Initializing address space, num pages %d\n", 
-					numPages);
-// first, set up the translation 
-    pageTable = new TranslationEntry[numPages];
-    for (i = 0; i < numPages; i++) {
-	pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-	pageTable[i].physicalPage = allocate();
-	pageTable[i].valid = TRUE;
-	pageTable[i].use = FALSE;
-	pageTable[i].dirty = FALSE;
-	pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
-					// a separate page, we could set its 
-					// pages to be read-only
-    }
-    
-// zero out the entire address space, to zero the unitialized data segment 
-// and the stack segment
-    //bzero(machine->mainMemory, size);
-	for(i=0; i<numPages; i++)
-	{
-		bzero( &(machine->mainMemory[pageTable[i].physicalPage * PageSize]), PageSize );
-	}
-
-// then, copy in the code and data segments into memory
-	for(i=0; i<numPages; i++)
-	{
-		memcpy(&(machine->mainMemory[pageTable[i].physicalPage * PageSize]),&(machine->mainMemory[src.pageTable[i].physicalPage * PageSize]),PageSize);
-	}
 }
 
 //----------------------------------------------------------------------

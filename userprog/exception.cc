@@ -318,7 +318,10 @@ ExceptionHandler(ExceptionType which)
   			sprintf(buf, "Thread %d", pid);
 			Thread* thread = new Thread(buf);
 			thread->pid = pid++;
-  			thread->space = new AddrSpace(*currentThread->space);
+  			
+  			//thread->space = new AddrSpace(*currentThread->space);
+			thread->space=currentThread->space;
+			
 			thread->SaveUserState();
 			thread->ChangeUserReg(4,0);
 			thread->ChangeUserReg(PCReg, arg1);
